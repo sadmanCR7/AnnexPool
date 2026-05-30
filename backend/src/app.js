@@ -4,13 +4,20 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const authRoutes = require('./routes/authRoutes');
 const app = express();
+const profileRoutes = require('./routes/profileRoutes'); // Add at the top with other imports
+const path = require('path');
+
 
 // Security & Utility Middlewares
-app.use(helmet()); // Protects headers
+app.use(helmet({ crossOriginResourcePolicy: false })); // Protects headers
 app.use(cors()); // Enables Cross-Origin Resource Sharing
 app.use(express.json()); // Parses incoming JSON requests
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/v1/auth', authRoutes);
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/api/v1/profile', profileRoutes);
+
+
 
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev')); // HTTP request logger

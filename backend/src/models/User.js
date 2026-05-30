@@ -12,6 +12,30 @@ const userSchema = new mongoose.Schema({
   },
   password: { type: String, required: true, select: false },
   role: { type: String, enum: ['rider', 'driver'], default: 'rider' },
+  role: { type: String, enum: ['rider', 'driver'], default: 'rider' }, // Existing field
+  
+  // NEW PROFILE FIELDS
+  profilePhoto: { type: String, default: '' },
+  phone: { type: String, default: '' },
+  department: { type: String, default: '' },
+  batch: { type: String, default: '' },
+  
+  // Array of emergency contacts
+  emergencyContacts: [{
+    name: String,
+    phone: String,
+    relation: String
+  }],
+
+  // Verification & Driver specific info
+  studentIdPhoto: { type: String, default: '' },
+  isVerified: { type: Boolean, default: false },
+  
+  driverInfo: {
+    licenseNumber: { type: String, default: '' },
+    vehicleModel: { type: String, default: '' },
+    licensePlate: { type: String, default: '' }
+  },
   isVerified: { type: Boolean, default: false }, // For future email OTP verification
 }, { timestamps: true });
 
