@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-
+const authRoutes = require('./routes/authRoutes');
 const app = express();
 
 // Security & Utility Middlewares
@@ -10,6 +10,7 @@ app.use(helmet()); // Protects headers
 app.use(cors()); // Enables Cross-Origin Resource Sharing
 app.use(express.json()); // Parses incoming JSON requests
 app.use(express.urlencoded({ extended: true }));
+app.use('/api/v1/auth', authRoutes);
 
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev')); // HTTP request logger

@@ -1,15 +1,24 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import '../../features/auth/screens/login_screen.dart';
+import '../../features/auth/screens/signup_screen.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/login',
   routes: [
     GoRoute(
-      path: '/',
-      builder: (context, state) => const Scaffold(
-        body: Center(
-          child: Text('AnnexPool: Initialization Successful', style: TextStyle(color: Color(0xFF0A2540))),
-        ),
+      path: '/login',
+      builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/signup',
+      builder: (context, state) => const SignupScreen(),
+    ),
+    GoRoute(
+      path: '/home',
+      builder: (context, state) => Scaffold(
+        appBar: AppBar(title: const Text('AnnexPool Home')),
+        body: const Center(child: Text('Welcome! You are logged in.')),
       ),
     ),
   ],
