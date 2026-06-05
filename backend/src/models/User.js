@@ -1,53 +1,68 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 
-const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { 
-    type: String, 
-    required: true, 
-    unique: true,
-    // Strict BUP Email Validation Regex
-    match: [/^[a-zA-Z0-9._%+-]+@bup\.edu\.bd$/, 'Registration is restricted to valid BUP emails only (@bup.edu.bd)']
-  },
-  password: { type: String, required: true, select: false },
-  role: { type: String, enum: ['rider', 'driver'], default: 'rider' },
-  role: { type: String, enum: ['rider', 'driver'], default: 'rider' }, // Existing field
-  
-  // NEW PROFILE FIELDS
-  profilePhoto: { type: String, default: '' },
-  phone: { type: String, default: '' },
-  department: { type: String, default: '' },
-  batch: { type: String, default: '' },
-  
-  // Array of emergency contacts
-  emergencyContacts: [{
-    name: String,
-    phone: String,
-    relation: String
-  }],
-
-  // Verification & Driver specific info
-  studentIdPhoto: { type: String, default: '' },
-  isVerified: { type: Boolean, default: false },
-  
-  driverInfo: {
-    licenseNumber: { type: String, default: '' },
-    vehicleModel: { type: String, default: '' },
-    licensePlate: { type: String, default: '' }
-  },
-  isVerified: { type: Boolean, default: false }, // For future email OTP verification
-}, { timestamps: true });
-
-// Encrypt password before saving
-userSchema.pre('save', async function() {
-  if (!this.isModified('password')) return;
-  this.password = await bcrypt.hash(this.password, 12);
-});
-
-// Method to verify passwords
-userSchema.methods.matchPassword = async function(enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+export const UserRole = {
+  Rider: 'Rider',
+  DriverRider: 'Driver+Rider',
+  Admin: 'Admin',
 };
 
-module.exports = mongoose.model('User', userSchema);
+const UserSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      validate: {
+        validator: function (v) {
+          return v.endsWith('@student.bup.edu.bd') || v.endsWith('@sudent.bup.edu.bd');
+        },
+        message: 'Registration is exclusively for BUP students using @student.bup.edu.bd email.',
+      },
+    },
+    password: { type: String, required: true, select: false },
+    role: {
+      type: String,
+      enum: Object.values(UserRole),
+      default: UserRole.Rider,
+    },
+    isEmailVerified: { type: Boolean, default: false },
+    isBanned: { type: Boolean, default: false },
+    studentId: { type: String },
+    isStudentIdVerified: { type: Boolean, default: false },
+    phone: { type: String },
+    avatarUrl: { type: String },
+    emergencyContacts: [
+      {
+        name: { type: String },
+        phone: { type: String },
+        relation: { type: String },
+      },
+    ],
+    gender: { type: String, enum: ['Male', 'Female', 'Other', 'Prefer not to say'], default: 'Prefer not to say' },
+    isVerifiedFemale: { type: Boolean, default: false },
+    preferWomenOnlyRides: { type: Boolean, default: false },
+    fcmToken: { type: String },
+    trustScore: { type: Number, default: 0, min: 0, max: 5 },
+    ratingCount: { type: Number, default: 0 },
+    ratingSum: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
+
+// Hash the password before saving
+UserSchema.pre('save', async function () {
+  if (!this.isModified('password')) return;
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
+// Compare password method
+UserSchema.methods.comparePassword = async function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+export default mongoose.model('User', UserSchema);

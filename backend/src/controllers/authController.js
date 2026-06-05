@@ -1,50 +1,93 @@
-const User = require('../models/User');
-const jwt = require('jsonwebtoken');
+import User from '../models/User.js';
+import { generateToken } from '../utils/jwt.js';
 
-// Generate JWT Token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '30d' });
-};
-
-exports.register = async (req, res) => {
+export const registerUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
     const userExists = await User.findOne({ email });
-    if (userExists) return res.status(400).json({ success: false, message: 'User already exists' });
-
-    // Validate BUP Email format manually just in case
-    if (!email.endsWith('@bup.edu.bd')) {
-      return res.status(400).json({ success: false, message: 'Only @bup.edu.bd emails are allowed.' });
+    if (userExists) {
+      return res.status(400).json({ message: 'User already exists' });
     }
 
-    const user = await User.create({ name, email, password, role });
-
-    res.status(201).json({
-      success: true,
-      token: generateToken(user._id),
-      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role,
     });
+
+    if (user) {
+      // For local development, simulate email verification link
+      const fakeVerificationToken = generateToken(user._id.toString(), user.role);
+      console.log(`\n\n[DEV ONLY] Email Verification Link: http://localhost:8000/api/auth/verify?token=${fakeVerificationToken}\n\n`);
+
+      res.status(201).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token: generateToken(user._id.toString(), user.role),
+        message: 'Registration successful. Check console for verification link (dev mode).',
+      });
+    } else {
+      res.status(400).json({ message: 'Invalid user data' });
+    }
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'User already exists with this email' });
+    }
+    if (error.name === 'ValidationError') {
+      const message = Object.values(error.errors)
+        .map((e) => e.message)
+        .join(', ');
+      return res.status(400).json({ message });
+    }
+    res.status(500).json({ message: error.message || 'Server error' });
   }
 };
 
-exports.login = async (req, res) => {
+export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email }).select('+password');
-    if (!user || !(await user.matchPassword(password))) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    res.status(200).json({
-      success: true,
-      token: generateToken(user._id),
-      user: { id: user._id, name: user.name, email: user.email, role: user.role }
-    });
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
+
+    if (user && user.isBanned) {
+      return res.status(403).json({ message: 'Your account has been suspended. Contact support.' });
+    }
+
+    if (user && (await user.comparePassword(password))) {
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token: generateToken(user._id.toString(), user.role),
+      });
+    } else {
+      res.status(401).json({ message: 'Invalid email or password' });
+    }
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Server Error' });
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
+};
+
+export const verifyEmail = async (req, res) => {
+  try {
+    // Basic simulation for verification
+    const { token } = req.query;
+    if (!token) {
+      return res.status(400).json({ message: 'Invalid token' });
+    }
+    
+    // In real app, we verify the token, extract ID, set isEmailVerified = true.
+    res.send('<h1>Email Verified Successfully (Simulation)</h1><p>You can now use AnnexPool.</p>');
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
   }
 };

@@ -1,348 +1,74 @@
-﻿# AnnexPool
+# AnnexPool
 
-### Ride Sharing System for BUP Students
+Ride-sharing platform for BUP students (`@student.bup.edu.bd`).
 
-AnnexPool is a modern cross-platform ride-sharing mobile application developed exclusively for students of Bangladesh University of Professionals (BUP).
+## Stack
 
-The platform helps students:
+- **Frontend:** Flutter, Riverpod, GoRouter, Dio, Socket.IO
+- **Backend:** Node.js, Express, MongoDB, JWT, Socket.IO
 
-* Share rides
-* Reduce transportation costs
-* Find co-riders
-* Improve commuting convenience
-* Ensure safer travel experiences
-* Access emergency safety features
+## Quick start
 
----
-
-# Project Overview
-
-AnnexPool is designed to create a trusted student transportation ecosystem inside BUP.
-
-The application allows:
-
-* Riders to request rides
-* Drivers to offer rides
-* Smart route matching between students
-* Real-time communication
-* Emergency SOS support
-* Women-only ride preferences
-* Secure student verification
-
----
-
-# Features
-
-## Authentication System
-
-* BUP email registration
-* Secure login system
-* JWT authentication
-* Email verification
-* Forgot password functionality
-* Role-based access
-
----
-
-## Ride Request System
-
-* Create ride requests
-* Select source & destination
-* Choose travel date & time
-* Vehicle preferences
-* Cancel ride requests
-
----
-
-## Ride Offering System
-
-* Offer rides
-* Manage available seats
-* Approve/reject ride requests
-* Cancel ride offers
-
----
-
-## Smart Route Matching
-
-* Intelligent route matching
-* Nearby ride suggestions
-* Time-based matching
-* Smart ride filtering
-
----
-
-## Seat Allocation System
-
-* Real-time seat tracking
-* Queue-based request handling
-* Automatic seat updates
-
----
-
-## Real-Time Chat System
-
-* Anonymous initial chat
-* Real-time messaging
-* Online/offline status
-* Push notifications
-* Block/report functionality
-
----
-
-## Women Safety & SOS
-
-* Women-only ride preference
-* Emergency SOS button
-* Trusted contact alerts
-* Misconduct reporting system
-
----
-
-## Notification System
-
-* Ride alerts
-* Chat notifications
-* Emergency notifications
-* Real-time updates
-
----
-
-## Rating & Review System
-
-* Driver ratings
-* Rider reviews
-* Trust score calculation
-
----
-
-## Admin Management System
-
-* User verification
-* Ride monitoring
-* Report management
-* User moderation
-
----
-
-# System Architecture
-
-The project follows a modern client-server architecture.
-
-## Frontend
-
-* Flutter
-* Dart
-* Riverpod / Provider
-* Dio
-* GoRouter
-
-## Backend
-
-* Node.js
-* Express.js
-* MongoDB Atlas
-* Socket.IO
-
-## Real-Time Communication
-
-* Socket.IO
-
-## Notifications
-
-* Firebase Cloud Messaging (FCM)
-
-## Authentication & Security
-
-* JWT Authentication
-* bcrypt password hashing
-
----
-
-# UI/UX Design
-
-The application follows a:
-
-* White background theme
-* Navy blue primary color palette
-* Minimal modern interface
-* Smooth animations
-* Clean responsive layouts
-
----
-
-# Project Structure
-
-```bash
-AnnexPool/
-│
-├── frontend/                 # Flutter Mobile App
-│
-├── backend/                  # Node.js Backend
-│
-├── docs/                     # Documentation
-│
-├── assets/                   # Images & UI assets
-│
-└── README.md
-```
-
----
-
-# Tech Stack
-
-| Technology    | Purpose                 |
-| ------------- | ----------------------- |
-| Flutter       | Cross-platform frontend |
-| Dart          | Frontend language       |
-| Node.js       | Backend runtime         |
-| Express.js    | Backend framework       |
-| MongoDB Atlas | Cloud database          |
-| Socket.IO     | Real-time communication |
-| Firebase FCM  | Push notifications      |
-| JWT           | Authentication          |
-| bcrypt        | Password encryption     |
-
----
-
-# Development Phases
-
-## Phase 1
-
-* Project setup
-* GitHub initialization
-* Flutter architecture
-* Backend architecture
-
-## Phase 2
-
-* Authentication system
-
-## Phase 3
-
-* User profile system
-
-## Phase 4
-
-* Ride request system
-
-## Phase 5
-
-* Ride offering system
-
-## Phase 6
-
-* Smart route matching
-
-## Phase 7
-
-* Real-time chat system
-
-## Phase 8
-
-* Women safety & SOS
-
-## Phase 9
-
-* Notification system
-
-## Phase 10
-
-* Rating & review system
-
-## Phase 11
-
-* Admin panel
-
-## Phase 12
-
-* Final optimization & deployment
-
----
-
-# Getting Started
-
-## Clone Repository
-
-```bash
-git clone https://github.com/sadmanCR7/AnnexPool.git
-```
-
----
-
-# Frontend Setup
-
-```bash
-cd frontend
-flutter pub get
-flutter run
-```
-
----
-
-# Backend Setup
+### 1. Backend
 
 ```bash
 cd backend
+cp .env.example .env   # edit MONGO_URI if needed
 npm install
 npm run dev
 ```
 
----
+Create an admin account (once):
 
-# Environment Variables
-
-Create a `.env` file inside the backend directory.
-
-```env
-PORT=5000
-MONGODB_URI=your_mongodb_uri
-JWT_SECRET=your_secret_key
-FCM_SERVER_KEY=your_fcm_key
+```bash
+npm run seed:admin
+# Default: admin@student.bup.edu.bd / Admin@123456
 ```
 
----
+### 2. Frontend
 
-# Security Features
+```bash
+cd frontend
+flutter pub get
+flutter run -d chrome   # or android / ios
+```
 
-* JWT-based authentication
-* Encrypted passwords using bcrypt
-* Secure REST APIs
-* Protected routes
-* Role-based authorization
-* Input validation
+- **Web / iOS simulator:** API `http://localhost:8000`
+- **Android emulator:** API `http://10.0.2.2:8000` (configured in `lib/core/config/app_config.dart`)
 
----
+### 3. Health check
 
-# Future Improvements
+```bash
+curl http://localhost:8000/api/health
+```
 
-* AI-based smart ride recommendations
-* Live GPS tracking
-* Digital payment integration
-* Ride history analytics
-* In-app calling
-* Advanced safety monitoring
+## User roles
 
----
+| Role | Capabilities |
+|------|----------------|
+| Rider | Request rides, join offers, chat, SOS |
+| Driver+Rider | All rider features + offer rides, driver dashboard |
+| Admin | Admin panel — users, reports, rides, analytics |
 
-# Developers
+## Project phases (completed)
 
-### Sadman Sakib
+1. Architecture & setup  
+2. Authentication  
+3. User profiles  
+4. Ride requests  
+5. Ride offers  
+6. Smart route matching  
+7. Real-time chat  
+8. Women safety & SOS  
+9. Notifications (in-app + socket)  
+10. Ratings & trust score  
+11. Admin panel  
+12. Rate limiting, docs, production notes  
 
-Bangladesh University of Professionals (BUP)
+## Firebase push (optional)
 
-### Md Shahriar Nasim Shawon
+Register FCM token via `POST /api/notifications/fcm-token`. Add `google-services.json` / Firebase Admin credentials for device push delivery.
 
-Bangladesh University of Professionals (BUP)
+## Environment variables
 
----
-
-# License
-
-This project is developed for academic and educational purposes.
-
----
-
-# AnnexPool Vision
-
-Building a safer, smarter, and more affordable transportation network for BUP students.
+See `backend/.env.example`.

@@ -8,7 +8,7 @@
 PRODUCT_NAME = frontend
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.bup.frontend
+PRODUCT_BUNDLE_IDENTIFIER = com.bup.annexpool.frontend
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.bup. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 com.bup.annexpool. All rights reserved.

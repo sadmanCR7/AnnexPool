@@ -1,35 +1,21 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart'; // For kIsWeb
-import 'dart:io'; // For Platform
+import '../config/app_config.dart';
+import '../storage/token_storage.dart';
 
 class ApiClient {
-  // Automatically choose the correct localhost based on the platform
-  static String get _baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:8000/api/v1'; // Web Browser
-    } else if (Platform.isAndroid) {
-      return 'http://10.0.2.2:8000/api/v1'; // Android Emulator
-    } else {
-      return 'http://localhost:8000/api/v1'; // Windows, Mac, iOS Simulator
-    }
-  }
+  static String get baseUrl => AppConfig.apiBaseUrl;
 
-  static final Dio _dio = Dio(
-    BaseOptions(
-      baseUrl: _baseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
-      headers: {'Content-Type': 'application/json'},
-    ),
-  );
-
-  static Dio get instance {
-    // Prevent adding multiple interceptors during hot reload
-    if (_dio.interceptors.isEmpty) {
-      _dio.interceptors.add(
-        LogInterceptor(responseBody: true, requestBody: true),
-      );
-    }
-    return _dio;
+  static Dio create(TokenStorage tokenStorage) {
+    final dio = Dio(BaseOptions(baseUrl: baseUrl));
+    dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final token = await tokenStorage.read();
+        if (token != null) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+        return handler.next(options);
+      },
+    ));
+    return dio;
   }
 }

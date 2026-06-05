@@ -1,33 +1,34 @@
-const multer = require('multer');
-const path = require('path');
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 
-// Set up storage engine
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const uploadsDir = path.join(__dirname, '../../uploads/avatars');
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // Files will be saved in the "backend/uploads" folder
+  destination: (_req, _file, cb) => cb(null, uploadsDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    cb(null, `${req.user._id}-${Date.now()}${ext}`);
   },
-  filename: function (req, file, cb) {
-    cb(null, `${req.user._id}-${Date.now()}${path.extname(file.originalname)}`);
-  }
 });
 
-// Check file type (Images only)
-const fileFilter = (req, file, cb) => {
-  const filetypes = /jpeg|jpg|png/;
-  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = filetypes.test(file.mimetype);
-
-  if (mimetype && extname) {
-    return cb(null, true);
+const fileFilter = (_req, file, cb) => {
+  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  if (allowed.includes(file.mimetype)) {
+    cb(null, true);
   } else {
-    cb(new Error('Images only (jpeg, jpg, png)!'));
+    cb(new Error('Only JPEG, PNG, WebP, and GIF images are allowed'));
   }
 };
 
-const upload = multer({
+export const avatarUpload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  fileFilter
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
-
-module.exports = upload;
