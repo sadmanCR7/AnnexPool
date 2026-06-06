@@ -1,27 +1,63 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:io';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/dio_errors.dart';
 import '../../../../core/storage/token_storage.dart';
 
 class AuthService {
-  final Dio _authDio = Dio(BaseOptions(
-    baseUrl: AppConfig.authBaseUrl,
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
-    headers: {'Content-Type': 'application/json'},
-  ));
-
+  late final Dio _authDio;
   final TokenStorage _tokenStorage;
 
-  AuthService(this._tokenStorage);
+  AuthService(this._tokenStorage) {
+    _authDio = Dio(
+      BaseOptions(
+        baseUrl: AppConfig.authBaseUrl,
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        headers: {'Content-Type': 'application/json'},
+      ),
+    );
+
+    // Configure HTTP client for HTTPS
+    _authDio.httpClientAdapter = HttpClientAdapter()
+      ..onHttpClientCreate = (HttpClient client) {
+        client.badCertificateCallback =
+            (X509Certificate cert, String host, int port) => false;
+        return client;
+      };
+
+    // Add debug logging
+    if (kDebugMode) {
+      _authDio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            print('🔵 Auth Request: ${options.method} ${options.uri}');
+            return handler.next(options);
+          },
+          onResponse: (response, handler) {
+            print('🟢 Auth Response: ${response.statusCode}');
+            return handler.next(response);
+          },
+          onError: (error, handler) {
+            print('🔴 Auth Error: ${error.type} - ${error.message}');
+            print(
+              '🔴 Error Details: ${error.response?.statusCode} ${error.response?.statusMessage}',
+            );
+            return handler.next(error);
+          },
+        ),
+      );
+    }
+  }
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
-      final response = await _authDio.post('/login', data: {
-        'email': email.toLowerCase().trim(),
-        'password': password,
-      });
+      final response = await _authDio.post(
+        '/login',
+        data: {'email': email.toLowerCase().trim(), 'password': password},
+      );
       return _normalizeUser(response.data);
     } on DioException catch (e) {
       throw Exception(dioErrorMessage(e, 'Login failed'));
@@ -35,12 +71,15 @@ class AuthService {
     String role,
   ) async {
     try {
-      final response = await _authDio.post('/register', data: {
-        'name': name.trim(),
-        'email': email.toLowerCase().trim(),
-        'password': password,
-        'role': role,
-      });
+      final response = await _authDio.post(
+        '/register',
+        data: {
+          'name': name.trim(),
+          'email': email.toLowerCase().trim(),
+          'password': password,
+          'role': role,
+        },
+      );
       return _normalizeUser(response.data);
     } on DioException catch (e) {
       throw Exception(dioErrorMessage(e, 'Registration failed'));
