@@ -33,9 +33,11 @@ class ProfileScreen extends ConsumerWidget {
           }),
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              ref.read(authStateProvider.notifier).logout();
-              context.go('/login');
+            onPressed: () async {
+              await ref.read(authStateProvider.notifier).logout();
+              if (context.mounted) {
+                context.go('/login');
+              }
             },
           )
         ],
@@ -138,7 +140,14 @@ class ProfileScreen extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: Theme.of(context).textTheme.bodyLarge),
-          Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: color ?? AppTheme.textPrimaryColor)),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+          ),
         ],
       ),
     );

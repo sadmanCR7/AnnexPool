@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../auth/data/providers/auth_provider.dart';
 import '../../data/providers/chat_provider.dart';
+import '../../data/services/chat_socket_service.dart';
 
 class ChatMessage {
   final String id;
@@ -39,9 +40,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   final List<ChatMessage> _liveMessages = [];
   bool _isTyping = false;
 
+  ChatSocketService? _socketService;
+
   @override
   void initState() {
     super.initState();
+    _socketService = ref.read(chatSocketServiceProvider);
     _initSocket();
   }
 
@@ -49,13 +53,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   void didUpdateWidget(ChatRoomScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.chatId != widget.chatId) {
-      ref.read(chatSocketServiceProvider).leaveChat(oldWidget.chatId);
+      _socketService?.leaveChat(oldWidget.chatId);
       setState(() {
         _liveMessages.clear();
         _isTyping = false;
       });
       ref.invalidate(chatMessagesProvider(widget.chatId));
-      ref.read(chatSocketServiceProvider).joinChat(widget.chatId);
+      _socketService?.joinChat(widget.chatId);
     }
   }
 
@@ -100,8 +104,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     final token = await ref.read(tokenStorageProvider).read();
     if (token == null) return;
 
-    final socket = ref.read(chatSocketServiceProvider);
-    socket.connect(
+    _socketService?.connect(
       token,
       onMessage: (data) {
         final myId = ref.read(authStateProvider).user?['_id']?.toString();
@@ -138,7 +141,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
       },
     );
 
-    socket.joinChat(widget.chatId);
+    _socketService?.joinChat(widget.chatId);
   }
 
   List<ChatMessage> _mergeMessages(List<dynamic> history) {
@@ -185,9 +188,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
 
   @override
   void dispose() {
-    ref.read(chatSocketServiceProvider).leaveChat(widget.chatId);
+    _socketService?.leaveChat(widget.chatId);
     _messageController.dispose();
     _scrollController.dispose();
+    // Invalidate chats provider so the list screen fetches latest lastMessage
+    try {
+      ref.invalidate(myChatsProvider);
+    } catch (_) {}
     super.dispose();
   }
 
@@ -208,9 +215,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
       );
     });
 
-    ref.read(chatSocketServiceProvider).sendMessage(widget.chatId, text);
+    _socketService?.sendMessage(widget.chatId, text);
     _messageController.clear();
-    ref.read(chatSocketServiceProvider).sendTyping(widget.chatId, false);
+    _socketService?.sendTyping(widget.chatId, false);
     _scrollToBottom();
   }
 

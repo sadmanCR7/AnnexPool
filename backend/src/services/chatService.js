@@ -119,9 +119,6 @@ export const userCanAccessChat = async (chat, userId) => {
 
 /** Ensure both ride participants exist on the chat document. */
 export const repairChatParticipants = async (chat) => {
-  if (chat.participants && chat.participants.length >= 2 && chat.participants.every(p => p.user)) {
-    return chat;
-  }
   if (chat.rideOffer) {
     const offer =
       chat.rideOffer?.driver != null
@@ -275,8 +272,7 @@ export const getOrCreateChat = async (rideOfferId, riderId, options = {}) => {
   return { chat, isNew };
 };
 
-export const getOrCreateChatForRequest = async (rideRequestId, myUserId, options = {}) => {
-  void options;
+export const getOrCreateChatForRequest = async (rideRequestId, myUserId, kind = 'driver_offer') => {
   const request = await RideRequest.findById(rideRequestId).populate('rider');
   if (!request) throw new Error('Ride request not found');
 
@@ -297,7 +293,7 @@ export const getOrCreateChatForRequest = async (rideRequestId, myUserId, options
       initiatorUser: myUserId,
       participants: [
         { user: request.rider._id, role: 'rider', identityRevealed: true },
-        { user: myUserId, role: 'driver', identityRevealed: true },
+        { user: myUserId, role: kind === 'driver_offer' ? 'driver' : 'rider', identityRevealed: true },
       ],
     });
     isNew = true;

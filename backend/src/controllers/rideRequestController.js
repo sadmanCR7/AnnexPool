@@ -197,6 +197,25 @@ export const completeRideRequest = async (req, res) => {
       )
     );
 
+    try {
+      // Find ALL chats linked to this ride request
+      const chats = await Chat.find({ rideRequest: request._id });
+      for (const chat of chats) {
+        try {
+          await saveMessage(
+            chat._id,
+            req.user._id,
+            `Chat closed for the route ${getRouteLabel({ rideRequest: request })}`,
+            req.app.get('io')
+          );
+        } catch (msgErr) {
+          console.error('Failed to send completion message to chat', chat._id, msgErr.message);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to send completion messages', err);
+    }
+
     res.json({ message: 'Ride request marked as completed', request });
   } catch (error) {
     res.status(500).json({ message: error.message || 'Server error' });

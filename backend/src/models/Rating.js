@@ -19,11 +19,11 @@ const RatingSchema = new mongoose.Schema(
 );
 
 RatingSchema.index(
-  { rideOffer: 1, reviewer: 1 },
+  { rideOffer: 1, reviewer: 1, ratedUser: 1 },
   { unique: true, partialFilterExpression: { rideOffer: { $exists: true } } }
 );
 RatingSchema.index(
-  { rideRequest: 1, reviewer: 1 },
+  { rideRequest: 1, reviewer: 1, ratedUser: 1 },
   { unique: true, partialFilterExpression: { rideRequest: { $exists: true } } }
 );
 

@@ -1,39 +1,7 @@
-# Node.js
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Environment variables
 .env
-.env.local
-.env.*.local
-
-# IDE
-.vscode/
-.idea/
-*.iml
-*.swp
-*.swo
-*~
 .DS_Store
-
-# OS
-Thumbs.db
-.DS_Store
-
-# Logs
-logs/
-*.log
-
-# Build/Dist
+uploads/
+coverage/
 dist/
 build/
-
-# Uploads (keep the directory but ignore contents)
-uploads/*
-!uploads/.gitkeep
-
-# Temporary files
-tmp/
-temp/

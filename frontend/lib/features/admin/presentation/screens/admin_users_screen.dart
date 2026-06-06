@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/providers/admin_provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/config/app_config.dart';
 
 class AdminUsersScreen extends ConsumerStatefulWidget {
   const AdminUsersScreen({super.key});
@@ -122,10 +123,15 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                       backgroundColor: banned
                           ? AppTheme.errorColor.withValues(alpha: 0.2)
                           : AppTheme.primaryColor.withValues(alpha: 0.1),
-                      child: Icon(
-                        banned ? Icons.block : Icons.person,
-                        color: banned ? AppTheme.errorColor : AppTheme.primaryColor,
-                      ),
+                      backgroundImage: u['avatarUrl'] != null && u['avatarUrl'].toString().isNotEmpty
+                          ? NetworkImage(AppConfig.resolveMediaUrl(u['avatarUrl']))
+                          : null,
+                      child: u['avatarUrl'] == null || u['avatarUrl'].toString().isEmpty
+                          ? Icon(
+                              banned ? Icons.block : Icons.person,
+                              color: banned ? AppTheme.errorColor : AppTheme.primaryColor,
+                            )
+                          : null,
                     ),
                   ),
                 );

@@ -1,54 +1,45 @@
-# Flutter
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-build/
-flutter_assets/
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
 
-# iOS
-ios/Flutter/Flutter.framework/
-ios/Flutter/Flutter.podspec
-
-# Android
-android/local.properties
-android/GeneratedPluginRegistrant.java
-android/app/debug/
-android/app/profile/
-android/app/release/
-
-# macOS
-macos/Flutter/Flutter-Debug.xcconfig
-macos/Flutter/Flutter-Release.xcconfig
-macos/Flutter/GeneratedPluginRegistrant.swift
-
-# Windows
-windows/flutter/generated_plugin_registrant.cc
-windows/flutter/generated_plugin_registrant.h
-windows/flutter/generated_plugins.cmake
-
-# Linux
-linux/flutter/generated_plugin_registrant.cc
-linux/flutter/generated_plugin_registrant.h
-linux/flutter/generated_plugins.cmake
-
-# Web
-web/flutter_service_worker.js
-
-# IDE
-.vscode/
-.idea/
+# IntelliJ related
 *.iml
 *.ipr
 *.iws
-.DS_Store
+.idea/
 
-# Generated files
-*.lock
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
 
-# Pubspec lock file (optional - uncomment if you want to exclude it)
-# pubspec.lock
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
 
-# Misc
-*.swp
-*.swo
-*~
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release

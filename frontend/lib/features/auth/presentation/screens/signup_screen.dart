@@ -65,6 +65,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Image.asset(
+                    'assets/images/logo.png',
+                    height: 80,
+                  ),
+                  const SizedBox(height: 16),
                   Text(
                     'Create Account',
                     textAlign: TextAlign.center,

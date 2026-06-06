@@ -1,5 +1,6 @@
 import RideOffer from '../models/RideOffer.js';
 import User from '../models/User.js';
+import Chat from '../models/Chat.js';
 import { getOrCreateChat } from '../services/chatService.js';
 import { saveMessage } from './chatController.js';
 import { getRouteLabel } from '../services/chatService.js';
@@ -288,6 +289,24 @@ export const completeRideOffer = async (req, res) => {
         })
       )
     );
+
+    try {
+      const chats = await Chat.find({ rideOffer: offer._id });
+      for (const chat of chats) {
+        try {
+          await saveMessage(
+            chat._id,
+            req.user._id,
+            `Chat closed for the route ${getRouteLabel({ rideOffer: offer })}`,
+            req.app.get('io')
+          );
+        } catch (msgErr) {
+          console.error('Failed to send completion message to chat', chat._id, msgErr.message);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to send completion messages', err);
+    }
 
     res.json({ message: 'Ride marked as completed', offer });
   } catch (error) {

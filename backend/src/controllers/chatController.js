@@ -32,13 +32,16 @@ const chatStartedText = (chat) => `Chat started for the route ${getRouteLabel(ch
 const chatClosedText = (chat) => `Chat closed for the route ${getRouteLabel(chat)}`;
 const isSystemRouteMessage = (content) =>
   content.startsWith('Chat started for the route') ||
-  content.startsWith('Chat closed for the route');
+  content.startsWith('Chat closed for the route') ||
+  content.startsWith('Accepted the request for the route') ||
+  content.startsWith('Declined the request for the route');
 
 // @desc    List user's chats
 // @route   GET /api/chats
 export const getMyChats = async (req, res) => {
   try {
-    const initialChats = await populateRideRefs(
+    // Find chats where user is in participants
+    const directChats = await populateRideRefs(
       populateChat(
         Chat.find({
           'participants.user': req.user._id,
@@ -46,6 +49,44 @@ export const getMyChats = async (req, res) => {
         }).sort({ lastMessageAt: -1, updatedAt: -1 })
       )
     );
+
+    // Also find chats linked to rides user is part of (driver/passenger/rider/responder)
+    const RideOffer = (await import('../models/RideOffer.js')).default;
+    const RideRequest = (await import('../models/RideRequest.js')).default;
+
+    const offerIds = await RideOffer.find({
+      $or: [
+        { driver: req.user._id },
+        { 'passengers.rider': req.user._id },
+      ],
+    }).distinct('_id');
+
+    const requestIds = await RideRequest.find({
+      $or: [
+        { rider: req.user._id },
+        { 'responders.user': req.user._id },
+      ],
+    }).distinct('_id');
+
+    const rideChats = await populateRideRefs(
+      populateChat(
+        Chat.find({
+          $or: [
+            { rideOffer: { $in: offerIds } },
+            { rideRequest: { $in: requestIds } },
+          ],
+          blockedBy: { $ne: req.user._id },
+        }).sort({ lastMessageAt: -1, updatedAt: -1 })
+      )
+    );
+
+    // Merge, dedup by chat id
+    const chatMap = new Map();
+    for (const c of directChats) chatMap.set(c._id.toString(), c);
+    for (const c of rideChats) {
+      if (!chatMap.has(c._id.toString())) chatMap.set(c._id.toString(), c);
+    }
+    const initialChats = [...chatMap.values()];
 
     const accessibleIds = [];
     for (const chat of initialChats) {
@@ -132,9 +173,11 @@ export const startChatForRide = async (req, res) => {
 // @route   POST /api/chats/request/:rideRequestId
 export const startChatForRequest = async (req, res) => {
   try {
+    const kind = req.body?.kind === 'driver_offer' ? 'driver_offer' : 'co_rider';
     const { chat, isNew } = await getOrCreateChatForRequest(
       req.params.rideRequestId, 
-      req.user._id
+      req.user._id,
+      kind
     );
 
     const request = await RideRequest.findById(req.params.rideRequestId);
@@ -200,11 +243,27 @@ export const getChatMessages = async (req, res) => {
       return res.status(403).json({ message: 'You are not part of this chat' });
     }
 
+    // If user has access but isn't in participants, add them directly
+    const uid = req.user._id.toString();
+    const inParticipants = chat.participants.some((p) => participantUserId(p) === uid);
+    if (!inParticipants) {
+      const existingRoles = chat.participants.map((p) => p.role);
+      const role = existingRoles.includes('rider') ? 'driver' : 'rider';
+      chat.participants.push({
+        user: req.user._id,
+        role,
+        identityRevealed: true,
+      });
+      chat.markModified('participants');
+      await chat.save();
+      // Re-populate with updated participants
+      chat = await populateRideRefs(populateChat(Chat.findById(chat._id)));
+    }
+
     const participantIds = chat.participants.map((p) => participantUserId(p));
 
     const messages = await Message.find({
       chat: chat._id,
-      sender: { $in: participantIds },
     })
       .populate('sender', 'name avatarUrl')
       .sort({ createdAt: 1 })
@@ -341,9 +400,7 @@ export const saveMessage = async (chatId, senderId, content, io, senderSocketId 
     throw new Error('Chat is blocked');
   }
 
-  if (chat.closedAt && !isSystemRouteMessage(content.trim())) {
-    throw new Error('Chat is closed for this route');
-  }
+  // Removed closedAt check so users can chat indefinitely
 
   const senderIdStr = senderId.toString();
   let isParticipant = chat.participants.some(
@@ -351,10 +408,19 @@ export const saveMessage = async (chatId, senderId, content, io, senderSocketId 
   );
   if (!isParticipant) {
     isParticipant = await userCanAccessChat(chat, senderId);
-    // If user has access but isn't in participants, repair so sender can be found
     if (isParticipant) {
-      await repairChatParticipants(chat);
-      // Re-fetch so participants array is fresh
+      // User has legitimate access but isn't in participants array.
+      // Add them directly rather than relying on repair (which may early-return).
+      const existingRoles = chat.participants.map((p) => p.role);
+      const role = existingRoles.includes('rider') ? 'driver' : 'rider';
+      chat.participants.push({
+        user: senderId,
+        role,
+        identityRevealed: true,
+      });
+      chat.markModified('participants');
+      await chat.save();
+      // Re-fetch so participants array is fully populated
       const refreshed = await populateRideRefs(
         Chat.findById(chatId).populate('participants.user', 'name avatarUrl isStudentIdVerified')
       );

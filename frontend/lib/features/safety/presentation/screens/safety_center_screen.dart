@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/providers/safety_provider.dart';
+import '../../../auth/data/providers/auth_provider.dart';
 
 class SafetyCenterScreen extends ConsumerStatefulWidget {
   const SafetyCenterScreen({super.key});
@@ -14,6 +15,7 @@ class _SafetyCenterScreenState extends ConsumerState<SafetyCenterScreen> {
   String _gender = 'Prefer not to say';
   bool _preferWomenOnly = false;
   bool _saving = false;
+  bool _prefsLoaded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -23,8 +25,11 @@ class _SafetyCenterScreenState extends ConsumerState<SafetyCenterScreen> {
       appBar: AppBar(title: const Text('Safety Center')),
       body: prefsAsync.when(
         data: (prefs) {
-          _gender = prefs['gender'] ?? _gender;
-          _preferWomenOnly = prefs['preferWomenOnlyRides'] == true;
+          if (!_prefsLoaded) {
+            _gender = prefs['gender'] ?? _gender;
+            _preferWomenOnly = prefs['preferWomenOnlyRides'] == true;
+            _prefsLoaded = true;
+          }
 
           return ListView(
             padding: const EdgeInsets.all(24),
@@ -50,7 +55,7 @@ class _SafetyCenterScreenState extends ConsumerState<SafetyCenterScreen> {
                         ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        initialValue: _gender,
+                        value: _gender,
                         decoration: const InputDecoration(labelText: 'Gender'),
                         items: const [
                           DropdownMenuItem(value: 'Female', child: Text('Female')),
@@ -107,7 +112,9 @@ class _SafetyCenterScreenState extends ConsumerState<SafetyCenterScreen> {
         'emergencyContacts': prefs['emergencyContacts'],
       });
       ref.invalidate(safetyPreferencesProvider);
+      ref.read(authStateProvider.notifier).restoreSession();
       if (mounted) {
+        setState(() => _prefsLoaded = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Safety preferences saved')),
         );
