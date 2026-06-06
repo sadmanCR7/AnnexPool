@@ -1,15 +1,21 @@
 import 'package:flutter/foundation.dart';
 
 class AppConfig {
-  /// Resolves API host for web, Android emulator, and iOS/desktop.
+  /// Production backend URL (deployed on Render)
+  static const String productionApiHost =
+      'https://annexpool-backend.onrender.com';
+
+  /// Local development backend
+  static const String devApiHost = 'http://localhost:8000';
+
+  /// Resolves API host - uses production by default
   static String get apiHost {
-    if (kIsWeb) return 'http://localhost:8000';
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-        return 'http://10.0.2.2:8000';
-      default:
-        return 'http://localhost:8000';
-    }
+    // Use production backend (Render)
+    return productionApiHost;
+
+    // For local development, uncomment:
+    // if (kDebugMode) return devApiHost;
+    // return productionApiHost;
   }
 
   static String get apiBaseUrl => '$apiHost/api';
