@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:io';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/dio_errors.dart';
@@ -19,14 +18,6 @@ class AuthService {
         headers: {'Content-Type': 'application/json'},
       ),
     );
-
-    // Configure HTTP client for HTTPS
-    _authDio.httpClientAdapter = HttpClientAdapter()
-      ..onHttpClientCreate = (HttpClient client) {
-        client.badCertificateCallback =
-            (X509Certificate cert, String host, int port) => false;
-        return client;
-      };
 
     // Add debug logging
     if (kDebugMode) {
