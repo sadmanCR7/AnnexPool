@@ -15,27 +15,52 @@ class AuthService {
         baseUrl: AppConfig.authBaseUrl,
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
-        headers: {'Content-Type': 'application/json'},
+        sendTimeout: const Duration(seconds: 30),
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'AnnexPool/1.0',
+        },
+        validateStatus: (status) {
+          // Accept any status code to see the actual error
+          return status != null;
+        },
       ),
     );
 
-    // Add debug logging
+    print('✅ AuthService initialized with baseUrl: ${AppConfig.authBaseUrl}');
+
+    // Add ultra-detailed debug logging
     if (kDebugMode) {
       _authDio.interceptors.add(
         InterceptorsWrapper(
           onRequest: (options, handler) {
-            print('🔵 Auth Request: ${options.method} ${options.uri}');
+            print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            print('🔵 AUTH REQUEST STARTED');
+            print('URL: ${options.uri}');
+            print('Method: ${options.method}');
+            print('Headers: ${options.headers}');
+            print('Data: ${options.data}');
+            print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             return handler.next(options);
           },
           onResponse: (response, handler) {
-            print('🟢 Auth Response: ${response.statusCode}');
+            print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            print('🟢 AUTH RESPONSE RECEIVED');
+            print('Status: ${response.statusCode}');
+            print('Data: ${response.data}');
+            print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             return handler.next(response);
           },
           onError: (error, handler) {
-            print('🔴 Auth Error: ${error.type} - ${error.message}');
-            print(
-              '🔴 Error Details: ${error.response?.statusCode} ${error.response?.statusMessage}',
-            );
+            print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            print('🔴 AUTH ERROR OCCURRED');
+            print('Error Type: ${error.type}');
+            print('Error Message: ${error.message}');
+            print('Error: $error');
+            print('Request: ${error.requestOptions.uri}');
+            print('Response Status: ${error.response?.statusCode}');
+            print('Response Data: ${error.response?.data}');
+            print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             return handler.next(error);
           },
         ),
