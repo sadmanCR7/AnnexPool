@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class AppConfig {
   /// Production backend URL (deployed on Render)
   static const String productionApiHost =
